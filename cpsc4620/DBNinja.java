@@ -308,7 +308,37 @@ public final class DBNinja {
 		 * Don't forget to order the data coming from the database appropriately.
 		 * 
 		 */
-		return null;
+		connect_to_db();
+		ArrayList<Topping> toppings = new ArrayList<>();
+
+		try {
+			String query = "SELECT * FROM topping WHERE topping_SmallAMT > 0 OR topping_MedAMT > 0 OR topping_LgAMT > 0 OR topping_XLAMT > 0 ORDER BY topping_TopName;";
+			PreparedStatement ps = conn.prepareStatement(query);
+			ResultSet rset = ps.executeQuery();
+
+			while (rset.next()){
+				int id = rset.getInt("topping_TopID");
+				String name = rset.getString("topping_TopName");
+				double small = rset.getDouble("topping_SmallAMT");
+				double med = rset.getDouble("topping_MedAMT");
+				double lg = rset.getDouble("topping_LgAMT");
+				double xl = rset.getDouble("topping_XLAMT");
+				double custPrice = rset.getDouble("topping_CustPrice");
+				double busPrice = rset.getDouble("topping_BusPrice");
+				int minINVT = rset.getInt("topping_MinINVT");
+				int curINVT = rset.getInt("topping_CurINVT");
+
+
+				Topping topping = new Topping(id, name, small, med, lg, xl, custPrice, busPrice, minINVT, curINVT);
+				toppings.add(topping);				
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		conn.close();
+		return toppings;
 	}
 
 	public static Topping findToppingByName(String name) throws SQLException, IOException 
