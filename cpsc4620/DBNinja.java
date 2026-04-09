@@ -209,7 +209,33 @@ public final class DBNinja {
 		 * If it's not found....then return null
 		 *  
 		 */
-		 return null;
+
+		connect_to_db();
+		try {
+			String query = "SELECT * FROM customer WHERE customer_PhoneNum =?;";
+			PreparedStatement ps = conn.prepareStatement(query);
+			ps.setString(1, phoneNumber);
+
+			ResultSet rset = ps.executeQuery();
+
+			if (rset.next()){
+				// extract data from the customer row
+				int id = rset.getInt("customer_CustID");
+				String fname = rset.getString("customer_Fname");
+				String lname = rset.getString("customer_Lname");
+				String phone = rset.getString("customer_PhoneNum");
+				
+				// create customer object and then return object
+				Customer foundCustomer = new Customer(id, fname, lname, phone);
+				return foundCustomer;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		conn.close();
+		return null;
 	}
 
 	public static String getCustomerName(int CustID) throws SQLException, IOException 
