@@ -146,25 +146,6 @@ public final class DBNinja {
 	 * Don't forget to order the data according to their order sequence, ie, order 1, order 2, etc.
 	 *
 	 */
-		connect_to_db();
-		
-		// Verify connection is established
-		if (conn != null && !conn.isClosed()) {
-			System.out.println("Connection verified successfully!");
-		} else {
-			System.out.println("Connection failed!");
-		}
-		
-		// Select all columns from customers table
-		String query = "SELECT * FROM customer;";
-		Statement stmt = conn.createStatement();
-		ResultSet rset = stmt.executeQuery(query);
-		
-		while(rset.next())
-		{
-			System.out.println(rset.getInt("customer_CustID"));
-		}
-		
 		return null;
 	}
 	
