@@ -192,51 +192,52 @@ public final class DBNinja {
 
 
 	public static ArrayList<Customer> getCustomerList() throws SQLException, IOException 
-	{
-		/*
-		 * Query the data for all the customers and return an arrayList of all the customers. 
-		 * Don't forget to order the data coming from the database appropriately.
-		 * 
-		*/
-		return null;
-	}
+{
+    connect_to_db();
+    
+    ArrayList<Customer> customers = new ArrayList<Customer>();
+    
+    String query = "SELECT * FROM customer ORDER BY customer_LName, customer_FName, customer_PhoneNum";
+    Statement stmt = conn.createStatement();
+    ResultSet rset = stmt.executeQuery(query);
+    
+    while(rset.next()) {
+        Customer c = new Customer(
+            rset.getInt("customer_CustID"),
+            rset.getString("customer_FName"),
+            rset.getString("customer_LName"),
+            rset.getString("customer_PhoneNum")
+        );
+        customers.add(c);
+    }
+    
+    conn.close();
+    return customers;
+}
 
-	public static Customer findCustomerByPhone(String phoneNumber)  throws SQLException, IOException 
-	{
-		/*
-		 * Query the database for a customer using a phone number.
-		 * If found, then return a Customer object for the customer.
-		 * If it's not found....then return null
-		 *  
-		 */
-
-		connect_to_db();
-		try {
-			String query = "SELECT * FROM customer WHERE customer_PhoneNum =?;";
-			PreparedStatement ps = conn.prepareStatement(query);
-			ps.setString(1, phoneNumber);
-
-			ResultSet rset = ps.executeQuery();
-
-			if (rset.next()){
-				// extract data from the customer row
-				int id = rset.getInt("customer_CustID");
-				String fname = rset.getString("customer_Fname");
-				String lname = rset.getString("customer_Lname");
-				String phone = rset.getString("customer_PhoneNum");
-				
-				// create customer object and then return object
-				Customer foundCustomer = new Customer(id, fname, lname, phone);
-				return foundCustomer;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		conn.close();
-		return null;
-	}
+	public static Customer findCustomerByPhone(String phoneNumber) throws SQLException, IOException
+{
+    connect_to_db();
+    
+    Customer c = null;
+    
+    String query = "SELECT * FROM customer WHERE customer_PhoneNum = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setString(1, phoneNumber);
+    ResultSet rset = stmt.executeQuery();
+    
+    if(rset.next()) {
+        c = new Customer(
+            rset.getInt("customer_CustID"),
+            rset.getString("customer_FName"),
+            rset.getString("customer_LName"),
+            rset.getString("customer_PhoneNum")
+        );
+    }
+    
+    conn.close();
+    return c;
+}
 
 	public static String getCustomerName(int CustID) throws SQLException, IOException 
 	{
@@ -308,37 +309,7 @@ public final class DBNinja {
 		 * Don't forget to order the data coming from the database appropriately.
 		 * 
 		 */
-		connect_to_db();
-		ArrayList<Topping> toppings = new ArrayList<>();
-
-		try {
-			String query = "SELECT * FROM topping WHERE topping_SmallAMT > 0 OR topping_MedAMT > 0 OR topping_LgAMT > 0 OR topping_XLAMT > 0 ORDER BY topping_TopName;";
-			PreparedStatement ps = conn.prepareStatement(query);
-			ResultSet rset = ps.executeQuery();
-
-			while (rset.next()){
-				int id = rset.getInt("topping_TopID");
-				String name = rset.getString("topping_TopName");
-				double small = rset.getDouble("topping_SmallAMT");
-				double med = rset.getDouble("topping_MedAMT");
-				double lg = rset.getDouble("topping_LgAMT");
-				double xl = rset.getDouble("topping_XLAMT");
-				double custPrice = rset.getDouble("topping_CustPrice");
-				double busPrice = rset.getDouble("topping_BusPrice");
-				int minINVT = rset.getInt("topping_MinINVT");
-				int curINVT = rset.getInt("topping_CurINVT");
-
-
-				Topping topping = new Topping(id, name, small, med, lg, xl, custPrice, busPrice, minINVT, curINVT);
-				toppings.add(topping);				
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		conn.close();
-		return toppings;
+		return null;
 	}
 
 	public static Topping findToppingByName(String name) throws SQLException, IOException 
