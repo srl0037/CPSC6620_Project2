@@ -334,112 +334,225 @@ public final class DBNinja {
 	}
 
 	public static void addToInventory(int toppingID, double quantity) throws SQLException, IOException 
-	{
-		/*
-		 * Updates the quantity of the topping in the database by the amount specified.
-		 * 
-		 * */
-	}
+{
+    connect_to_db();
+    
+    String query = "UPDATE topping SET topping_CurINVT = topping_CurINVT + ? WHERE topping_TopID = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setDouble(1, quantity);
+    stmt.setInt(2, toppingID);
+    stmt.executeUpdate();
+    
+    conn.close();
+}
 	
 	
 	public static ArrayList<Pizza> getPizzas(Order o) throws SQLException, IOException 
-	{
-		/*
-		 * Build an ArrayList of all the Pizzas associated with the Order.
-		 * 
-		 */
-		return null;
-	}
+{
+    connect_to_db();
+    
+    ArrayList<Pizza> pizzas = new ArrayList<Pizza>();
+    
+    String query = "SELECT * FROM pizza WHERE ordertable_OrderID = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setInt(1, o.getOrderID());
+    ResultSet rset = stmt.executeQuery();
+    
+    while(rset.next()) {
+        Pizza p = new Pizza(
+            rset.getInt("pizza_PizzaID"),
+            rset.getString("pizza_Size"),
+            rset.getString("pizza_CrustType"),
+            rset.getInt("ordertable_OrderID"),
+            rset.getString("pizza_PizzaState"),
+            rset.getString("pizza_PizzaDate"),
+            rset.getDouble("pizza_CustPrice"),
+            rset.getDouble("pizza_BusPrice")
+        );
+        
+        // get toppings and discounts for each pizza
+        conn.close();
+        p.setToppings(getToppingsOnPizza(p));
+        p.setDiscounts(getDiscounts(p));
+        connect_to_db();
+        
+        pizzas.add(p);
+    }
+    
+    conn.close();
+    return pizzas;
+}
 
 	public static ArrayList<Discount> getDiscounts(Order o) throws SQLException, IOException 
-	{
-		/* 
-		 * Build an array list of all the Discounts associted with the Order.
-		 * 
-		 */
-
-		return null;
-	}
+{
+    connect_to_db();
+    
+    ArrayList<Discount> discounts = new ArrayList<Discount>();
+    
+    String query = "SELECT d.* FROM discount d JOIN order_discount od ON d.discount_DiscountID = od.discount_DiscountID WHERE od.ordertable_OrderID = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setInt(1, o.getOrderID());
+    ResultSet rset = stmt.executeQuery();
+    
+    while(rset.next()) {
+        Discount d = new Discount(
+            rset.getInt("discount_DiscountID"),
+            rset.getString("discount_DiscountName"),
+            rset.getDouble("discount_Amount"),
+            rset.getBoolean("discount_IsPercent")
+        );
+        discounts.add(d);
+    }
+    
+    conn.close();
+    return discounts;
+}
 
 	public static ArrayList<Discount> getDiscounts(Pizza p) throws SQLException, IOException 
-	{
-		/* 
-		 * Build an array list of all the Discounts associted with the Pizza.
-		 * 
-		 */
-	
-		return null;
-	}
+{
+    connect_to_db();
+    
+    ArrayList<Discount> discounts = new ArrayList<Discount>();
+    
+    String query = "SELECT d.* FROM discount d JOIN pizza_discount pd ON d.discount_DiscountID = pd.discount_DiscountID WHERE pd.pizza_PizzaID = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setInt(1, p.getPizzaID());
+    ResultSet rset = stmt.executeQuery();
+    
+    while(rset.next()) {
+        Discount d = new Discount(
+            rset.getInt("discount_DiscountID"),
+            rset.getString("discount_DiscountName"),
+            rset.getDouble("discount_Amount"),
+            rset.getBoolean("discount_IsPercent")
+        );
+        discounts.add(d);
+    }
+    
+    conn.close();
+    return discounts;
+}
 
 	public static double getBaseCustPrice(String size, String crust) throws SQLException, IOException 
-	{
-		/* 
-		 * Query the database fro the base customer price for that size and crust pizza.
-		 * 
-		*/
-		return 0.0;
-	}
+{
+    connect_to_db();
+    
+    double price = 0.0;
+    
+    String query = "SELECT baseprice_CustPrice FROM baseprice WHERE baseprice_Size = ? AND baseprice_CrustType = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setString(1, size);
+    stmt.setString(2, crust);
+    ResultSet rset = stmt.executeQuery();
+    
+    if(rset.next()) {
+        price = rset.getDouble("baseprice_CustPrice");
+    }
+    
+    conn.close();
+    return price;
+}
 
 	public static double getBaseBusPrice(String size, String crust) throws SQLException, IOException 
-	{
-		/* 
-		 * Query the database fro the base business price for that size and crust pizza.
-		 * 
-		*/
-		return 0.0;
-	}
+{
+    connect_to_db();
+    
+    double price = 0.0;
+    
+    String query = "SELECT baseprice_BusPrice FROM baseprice WHERE baseprice_Size = ? AND baseprice_CrustType = ?";
+    PreparedStatement stmt = conn.prepareStatement(query);
+    stmt.setString(1, size);
+    stmt.setString(2, crust);
+    ResultSet rset = stmt.executeQuery();
+    
+    if(rset.next()) {
+        price = rset.getDouble("baseprice_BusPrice");
+    }
+    
+    conn.close();
+    return price;
+}
 
 	
 	public static void printToppingReport() throws SQLException, IOException
-	{
-		/*
-		 * Prints the ToppingPopularity view. Remember that this view
-		 * needs to exist in your DB, so be sure you've run your createViews.sql
-		 * files on your testing DB if you haven't already.
-		 * 
-		 * The result should be readable and sorted as indicated in the prompt.
-		 * 
-		 * HINT: You need to match the expected output EXACTLY....I would suggest
-		 * you look at the printf method (rather that the simple print of println).
-		 * It operates the same in Java as it does in C and will make your code
-		 * better.
-		 * 
-		 */
-	}
+{
+    connect_to_db();
+    
+    String query = "SELECT * FROM toppingpopularity";
+    Statement stmt = conn.createStatement();
+    ResultSet rset = stmt.executeQuery(query);
+    
+    System.out.printf("%-30s %s%n", "Topping", "Topping Count");
+    System.out.printf("%-30s %s%n", "-------", "-------------");
+    
+    while(rset.next()) {
+        System.out.printf("%-30s %d%n", 
+            rset.getString("Topping"), 
+            rset.getInt("ToppingCount"));
+    }
+    
+    conn.close();
+}
 	
 	public static void printProfitByPizzaReport() throws SQLException, IOException 
-	{
-		/*
-		 * Prints the ProfitByPizza view. Remember that this view
-		 * needs to exist in your DB, so be sure you've run your createViews.sql
-		 * files on your testing DB if you haven't already.
-		 * 
-		 * The result should be readable and sorted as indicated in the prompt.
-		 * 
-		 * HINT: You need to match the expected output EXACTLY....I would suggest
-		 * you look at the printf method (rather that the simple print of println).
-		 * It operates the same in Java as it does in C and will make your code
-		 * better.
-		 * 
-		 */
-	}
+{
+    connect_to_db();
+    
+    String query = "SELECT * FROM profitbypizza";
+    Statement stmt = conn.createStatement();
+    ResultSet rset = stmt.executeQuery(query);
+    
+    System.out.printf("%-15s %-15s %-10s %s%n", "Pizza Size", "Pizza Crust", "Profit", "Last Order Date");
+    System.out.printf("%-15s %-15s %-10s %s%n", "----------", "-----------", "------", "---------------");
+    
+    while(rset.next()) {
+        System.out.printf("%-15s %-15s %-10.2f %s%n",
+            rset.getString("Size"),
+            rset.getString("Crust"),
+            rset.getDouble("Profit"),
+            rset.getString("OrderMonth"));
+    }
+    
+    conn.close();
+}
 	
 	public static void printProfitByOrderTypeReport() throws SQLException, IOException
-	{
-		/*
-		 * Prints the ProfitByOrderType view. Remember that this view
-		 * needs to exist in your DB, so be sure you've run your createViews.sql
-		 * files on your testing DB if you haven't already.
-		 * 
-		 * The result should be readable and sorted as indicated in the prompt.
-		 *
-		 * HINT: You need to match the expected output EXACTLY....I would suggest
-		 * you look at the printf method (rather that the simple print of println).
-		 * It operates the same in Java as it does in C and will make your code
-		 * better.
-		 * 
-		 */
-	}
+{
+    connect_to_db();
+    
+    String query = "SELECT * FROM profitbyordertype WHERE CustomerType != ''";
+    Statement stmt = conn.createStatement();
+    ResultSet rset = stmt.executeQuery(query);
+    
+    System.out.printf("%-15s %-15s %-20s %-20s %s%n", "Customer Type", "Order Month", "Total Order Price", "Total Order Cost", "Profit");
+    System.out.printf("%-15s %-15s %-20s %-20s %s%n", "-------------", "-----------", "-----------------", "----------------", "------");
+    
+    double totalPrice = 0.0;
+    double totalCost = 0.0;
+    double totalProfit = 0.0;
+    
+    while(rset.next()) {
+        double price = rset.getDouble("TotalOrderPrice");
+        double cost = rset.getDouble("TotalOrderCost");
+        double profit = rset.getDouble("Profit");
+        
+        totalPrice += price;
+        totalCost += cost;
+        totalProfit += profit;
+        
+        System.out.printf("%-15s %-15s %-20.2f %-20.2f %.2f%n",
+            rset.getString("CustomerType"),
+            rset.getString("OrderMonth"),
+            price,
+            cost,
+            profit);
+    }
+    
+    System.out.printf("%-15s %-15s %-20.2f %-20.2f %.2f%n",
+        "", "Grand Total", totalPrice, totalCost, totalProfit);
+    
+    conn.close();
+}
 	
 	
 	
