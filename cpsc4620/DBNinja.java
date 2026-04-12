@@ -69,6 +69,51 @@ public final class DBNinja {
 
 	}
 
+
+	public static void completeOrder(int orderID, order_state newState) throws SQLException, IOException {
+    connect_to_db();
+
+    try {
+
+        // PREPARED → mark order + pizzas complete
+        if (newState == order_state.PREPARED) {
+
+            String orderQuery = "UPDATE ordertable SET ordertable_IsComplete = 1 WHERE ordertable_OrderID = ?";
+            PreparedStatement ps1 = conn.prepareStatement(orderQuery);
+            ps1.setInt(1, orderID);
+            ps1.executeUpdate();
+
+            String pizzaQuery = "UPDATE pizza SET pizza_PizzaState = 'Completed' WHERE ordertable_OrderID = ?";
+            PreparedStatement ps2 = conn.prepareStatement(pizzaQuery);
+            ps2.setInt(1, orderID);
+            ps2.executeUpdate();
+        }
+
+        // DELIVERED → update delivery table
+        else if (newState == order_state.DELIVERED) {
+
+            String deliveryQuery = "UPDATE delivery SET delivery_IsDelivered = 1 WHERE ordertable_OrderID = ?";
+            PreparedStatement ps = conn.prepareStatement(deliveryQuery);
+            ps.setInt(1, orderID);
+            ps.executeUpdate();
+        }
+
+        // PICKEDUP → update pickup table
+        else if (newState == order_state.PICKEDUP) {
+
+            String pickupQuery = "UPDATE pickup SET pickup_IsPickedUp = 1 WHERE ordertable_OrderID = ?";
+            PreparedStatement ps = conn.prepareStatement(pickupQuery);
+            ps.setInt(1, orderID);
+            ps.executeUpdate();
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        conn.close();
+    }
+}
+
 	public static void addOrder(Order o) throws SQLException, IOException 
 	{
 		connect_to_db();
@@ -195,6 +240,18 @@ public final class DBNinja {
 		connect_to_db();
 
 		try {
+			String queryID = "SELECT * FROM pizza ORDER BY pizza_PizzaID DESC LIMIT 1;";
+			PreparedStatement psID = conn.prepareStatement(queryID);
+			ResultSet rset = psID.executeQuery();
+
+			int currentID = -1;
+			if (rset.next()) {
+				currentID = rset.getInt("pizza_PizzaID");
+			}
+
+			int nextID = currentID + 1;
+			p.setPizzaID(nextID);
+
 			String pizzaQuery = "INSERT INTO pizza (pizza_PizzaID, pizza_Size, pizza_CrustType, ordertable_OrderID, pizza_PizzaState, pizza_PizzaDate, pizza_CustPrice, pizza_BusPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement ps5 = conn.prepareStatement(pizzaQuery);
